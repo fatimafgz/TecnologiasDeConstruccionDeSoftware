@@ -1,0 +1,13 @@
+{
+  "name": "zerowaste-pantry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ZeroWaste Pantry - recetas segun lo que esta por caducar. Arquitectura N-capas.",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node src/data/db/seed.js --reset",
+    "test": "node --test tests/*.test.js"
+  }
+}

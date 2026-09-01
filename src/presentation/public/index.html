@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZeroWaste Pantry — Cocina lo que está por vencer</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥬</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,600;0,700;1,400&family=Karla:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="paper-grain" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🥬</span>
+      <div>
+        <h1>ZeroWaste Pantry</h1>
+        <p class="tagline">Cocina primero lo que está por vencer</p>
+      </div>
+    </div>
+
+    <div class="rescue-meter" id="rescueMeter" aria-live="polite">
+      <span class="rescue-count" id="rescueCount">—</span>
+      <span class="rescue-label">en riesgo hoy</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" role="tab" data-view="pantry" aria-selected="true">🧺 Mi despensa</button>
+    <button class="tab" role="tab" data-view="recipes" aria-selected="false">📇 Recetas sugeridas</button>
+    <button class="tab" role="tab" data-view="history" aria-selected="false">🍲 Cocinadas</button>
+  </nav>
+
+  <main>
+    <!-- ============================= DESPENSA ============================= -->
+    <section id="view-pantry" class="view is-active">
+      <div class="pantry-grid">
+        <!-- Pizarra de cocina: alta de ingredientes -->
+        <aside class="chalkboard">
+          <h2 class="chalk-title">Añadir a la despensa</h2>
+          <form id="addForm" class="chalk-form" novalidate>
+            <label class="chalk-field">
+              <span>Ingrediente</span>
+              <input name="name" list="ingredientList" placeholder="Espinaca, leche, pollo…" required />
+              <datalist id="ingredientList"></datalist>
+            </label>
+
+            <label class="chalk-field">
+              <span>Categoría</span>
+              <select name="category">
+                <option>Verduras</option>
+                <option>Lacteos</option>
+                <option>Carnes</option>
+                <option>Despensa seca</option>
+                <option>Otros</option>
+              </select>
+            </label>
+
+            <div class="chalk-row">
+              <label class="chalk-field">
+                <span>Cantidad</span>
+                <input name="quantity" type="number" min="0.1" step="0.1" placeholder="250" required />
+              </label>
+              <label class="chalk-field chalk-field--narrow">
+                <span>Unidad</span>
+                <select name="unit">
+                  <option value="g">g</option>
+                  <option value="ml">ml</option>
+                  <option value="pza">pza</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="chalk-field">
+              <span>Caduca el</span>
+              <input name="expiryDate" type="date" required />
+            </label>
+
+            <button class="btn btn--chalk" type="submit">Guardar en la alacena</button>
+            <p class="chalk-error" id="addError" role="alert"></p>
+          </form>
+
+          <div class="chalk-legend">
+            <h3>Semáforo</h3>
+            <p><span class="dot dot--fresh"></span> Fresco · más de 5 días</p>
+            <p><span class="dot dot--soon"></span> Consumir pronto · 2 a 4 días</p>
+            <p><span class="dot dot--urgent"></span> Urgente · 24-48 h o vencido</p>
+          </div>
+        </aside>
+
+        <!-- Alacena de madera -->
+        <div class="cupboard">
+          <div class="cupboard-head">
+            <h2>La alacena</h2>
+            <div class="filters" id="categoryFilters"></div>
+          </div>
+          <div id="shelves" class="shelves"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================= RECETAS ============================= -->
+    <section id="view-recipes" class="view">
+      <div class="recipes-head">
+        <div>
+          <h2>Recetario ordenado por <em>Score de Aprovechamiento</em></h2>
+          <p class="muted">Primero las recetas que rescatan más ingredientes al límite.</p>
+        </div>
+        <div class="servings-picker" role="group" aria-label="Comensales">
+          <span class="servings-label">Comensales</span>
+          <button class="serv" data-servings="1">1</button>
+          <button class="serv is-active" data-servings="2">2</button>
+          <button class="serv" data-servings="4">4</button>
+          <button class="serv" data-servings="6">6</button>
+        </div>
+      </div>
+      <div id="recipeCards" class="recipe-cards"></div>
+    </section>
+
+    <!-- ============================= HISTORIAL ============================= -->
+    <section id="view-history" class="view">
+      <h2>Ollas ya cocinadas</h2>
+      <p class="muted">Cada entrada descontó ingredientes reales de tu despensa.</p>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <!-- ============================= MODAL RECETA ============================= -->
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="recipe-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <button class="sheet-close" id="sheetClose" aria-label="Cerrar">✕</button>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
