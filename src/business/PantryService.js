@@ -7,7 +7,9 @@ import { Category, Unit } from '../domain/Ingredient.js';
 import { URGENCY_UI, UrgencyLevel } from '../domain/Urgency.js';
 import { ValidationError, NotFoundError } from './errors.js';
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]{2,50}$/;
+const QUANTITY_REGEX = /^(?:[1-9]\d*|0)(?:\.\d{1,2})?$/;
+const ISO_DATE_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
 export class PantryService {
   constructor({ pantryRepository, ingredientRepository, clock = () => new Date() }) {
@@ -65,13 +67,29 @@ export class PantryService {
 
   #validate({ name, quantity, unit, expiryDate }) {
     const errors = {};
-    if (!name || !String(name).trim()) errors.name = 'El nombre del ingrediente es obligatorio';
-    if (!(Number(quantity) > 0)) errors.quantity = 'La cantidad debe ser mayor que cero';
-    if (!Object.values(Unit).includes(unit)) errors.unit = `Unidad invalida (g, ml o pza)`;
-    if (!ISO_DATE.test(String(expiryDate ?? '')) || Number.isNaN(Date.parse(expiryDate))) {
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    if (!trimmedName) {
+      errors.name = 'El nombre del ingrediente es obligatorio';
+    } else if (!NAME_REGEX.test(trimmedName)) {
+      errors.name = 'El nombre debe contener solo letras y espacios (2 a 50 caracteres)';
+    }
+
+    const qtyStr = String(quantity ?? '').trim();
+    if (!qtyStr || !QUANTITY_REGEX.test(qtyStr) || !(Number(qtyStr) > 0)) {
+      errors.quantity = 'La cantidad debe ser un numero positivo valido';
+    }
+
+    if (!Object.values(Unit).includes(unit)) {
+      errors.unit = `Unidad invalida (g, ml o pza)`;
+    }
+
+    if (!ISO_DATE_REGEX.test(String(expiryDate ?? '').trim()) || Number.isNaN(Date.parse(expiryDate))) {
       errors.expiryDate = 'Fecha de caducidad invalida (formato AAAA-MM-DD)';
     }
-    if (Object.keys(errors).length) throw new ValidationError('Datos de ingrediente invalidos', errors);
+
+    if (Object.keys(errors).length) {
+      throw new ValidationError('Datos de ingrediente invalidos', errors);
+    }
   }
 
   /** Enriquece la entidad con los datos derivados que consume la UI. */

@@ -3,7 +3,10 @@ import { CreatePantryItemDTO, UpdateQuantityDTO } from '../dto/PantryItemDTO.js'
 import { sendJson, readJsonBody } from '../http/responses.js';
 
 export class PantryController {
-  constructor({ pantryService }) { this.service = pantryService; }
+  constructor({ pantryService, wsServer }) {
+    this.service = pantryService;
+    this.ws = wsServer;
+  }
 
   /** GET /api/pantry?category=Verduras */
   list(req, res, { query }) {
@@ -18,17 +21,23 @@ export class PantryController {
   /** POST /api/pantry */
   async create(req, res) {
     const dto = CreatePantryItemDTO.from(await readJsonBody(req));
-    sendJson(res, 201, this.service.addItem(dto));
+    const created = this.service.addItem(dto);
+    this.ws?.broadcastPantryUpdate('add', created);
+    sendJson(res, 201, created);
   }
 
   /** PATCH /api/pantry/:id */
   async updateQuantity(req, res, { params }) {
     const dto = UpdateQuantityDTO.from(await readJsonBody(req));
-    sendJson(res, 200, this.service.updateQuantity(Number(params.id), dto.quantity));
+    const updated = this.service.updateQuantity(Number(params.id), dto.quantity);
+    this.ws?.broadcastPantryUpdate('update', updated);
+    sendJson(res, 200, updated);
   }
 
   /** DELETE /api/pantry/:id */
   remove(req, res, { params }) {
-    sendJson(res, 200, this.service.removeItem(Number(params.id)));
+    const result = this.service.removeItem(Number(params.id));
+    this.ws?.broadcastPantryUpdate('remove', { id: Number(params.id) });
+    sendJson(res, 200, result);
   }
 }

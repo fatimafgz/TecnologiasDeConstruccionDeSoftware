@@ -17,21 +17,44 @@
     <div class="brand">
       <span class="brand-mark" aria-hidden="true">🥬</span>
       <div>
-        <h1>ZeroWaste Pantry</h1>
-        <p class="tagline">Cocina primero lo que está por vencer</p>
+        <h1 data-i18n="app.title">ZeroWaste Pantry</h1>
+        <p class="tagline" data-i18n="app.tagline">Cocina primero lo que está por vencer</p>
       </div>
     </div>
 
-    <div class="rescue-meter" id="rescueMeter" aria-live="polite">
-      <span class="rescue-count" id="rescueCount">—</span>
-      <span class="rescue-label">en riesgo hoy</span>
+    <div class="header-right">
+      <div class="ws-badge" id="wsBadge" title="Canal WebSocket en tiempo real">
+        <span class="ws-indicator-dot" aria-hidden="true"></span>
+        <span id="wsStatusText" data-i18n="websocket.connecting">En vivo</span>
+      </div>
+      <button type="button" class="btn btn--ws-ping" id="wsBroadcastBtn" title="Transmitir alerta en tiempo real a otros cocineros" data-i18n="websocket.broadcastBtn">📡 Avisar cocina</button>
+
+      <div class="lang-dropdown-wrapper">
+        <label for="langSelect" class="lang-label" data-i18n="app.selectLang">Idioma</label>
+        <select id="langSelect" class="lang-dropdown" aria-label="Seleccionar idioma / Select language">
+          <option value="es" selected>🇪🇸 Español</option>
+          <option value="en">🇬🇧 English</option>
+        </select>
+      </div>
+
+      <div class="header-meters">
+        <div class="rescue-meter" id="rescueMeter" aria-live="polite">
+          <span class="rescue-count" id="rescueCount">—</span>
+          <span class="rescue-label" data-i18n="app.atRiskToday">en riesgo hoy</span>
+        </div>
+        <div class="session-meter" id="sessionMeter" title="Ahorro ecológico de la sesión activa">
+          <span class="session-count" id="sessionCo2">0.00 kg</span>
+          <span class="session-label" data-i18n="app.co2SavedSession">CO₂ evitado en sesión</span>
+        </div>
+      </div>
     </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" role="tab" data-view="pantry" aria-selected="true">🧺 Mi despensa</button>
-    <button class="tab" role="tab" data-view="recipes" aria-selected="false">📇 Recetas sugeridas</button>
-    <button class="tab" role="tab" data-view="history" aria-selected="false">🍲 Cocinadas</button>
+    <button class="tab is-active" role="tab" data-view="pantry" data-i18n="tabs.pantry" aria-selected="true">🧺 Mi despensa</button>
+    <button class="tab" role="tab" data-view="recipes" data-i18n="tabs.recipes" aria-selected="false">📇 Recetas sugeridas</button>
+    <button class="tab" role="tab" data-view="history" data-i18n="tabs.history" aria-selected="false">🍲 Cocinadas</button>
+    <button class="tab" role="tab" data-view="external" data-i18n="tabs.external" aria-selected="false">🌐 Recetas del mundo (API Externa)</button>
   </nav>
 
   <main>
@@ -40,33 +63,38 @@
       <div class="pantry-grid">
         <!-- Pizarra de cocina: alta de ingredientes -->
         <aside class="chalkboard">
-          <h2 class="chalk-title">Añadir a la despensa</h2>
+          <h2 class="chalk-title" data-i18n="pantry.addTitle">Añadir a la despensa</h2>
           <form id="addForm" class="chalk-form" novalidate>
-            <label class="chalk-field">
-              <span>Ingrediente</span>
-              <input name="name" list="ingredientList" placeholder="Espinaca, leche, pollo…" required />
+            <label class="chalk-field" id="field-name">
+              <span data-i18n="pantry.ingredient">Ingrediente</span>
+              <input name="name" id="inputName" list="ingredientList" placeholder="Espinaca, leche, pollo…" data-i18n-placeholder="pantry.ingredientPlaceholder" autocomplete="off" required aria-describedby="nameError" />
               <datalist id="ingredientList"></datalist>
+              <span class="field-error-msg" id="nameError" role="alert" aria-live="polite"></span>
             </label>
 
-            <label class="chalk-field">
-              <span>Categoría</span>
-              <select name="category">
-                <option>Verduras</option>
-                <option>Lacteos</option>
-                <option>Carnes</option>
-                <option>Despensa seca</option>
-                <option>Otros</option>
+            <button type="button" class="btn btn--off" id="openFoodFactsBtn" data-i18n="external.openFoodFactsBtn">🔍 Consultar Open Food Facts</button>
+            <div id="offPreview" class="off-preview" hidden></div>
+
+            <label class="chalk-field" id="field-category">
+              <span data-i18n="pantry.category">Categoría</span>
+              <select name="category" id="addCategorySelect">
+                <option value="Verduras">Verduras</option>
+                <option value="Lacteos">Lacteos</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Despensa seca">Despensa seca</option>
+                <option value="Otros">Otros</option>
               </select>
             </label>
 
             <div class="chalk-row">
-              <label class="chalk-field">
-                <span>Cantidad</span>
-                <input name="quantity" type="number" min="0.1" step="0.1" placeholder="250" required />
+              <label class="chalk-field" id="field-quantity">
+                <span data-i18n="pantry.quantity">Cantidad</span>
+                <input name="quantity" id="inputQuantity" type="text" inputmode="decimal" placeholder="250" required aria-describedby="quantityError" />
+                <span class="field-error-msg" id="quantityError" role="alert" aria-live="polite"></span>
               </label>
-              <label class="chalk-field chalk-field--narrow">
-                <span>Unidad</span>
-                <select name="unit">
+              <label class="chalk-field chalk-field--narrow" id="field-unit">
+                <span data-i18n="pantry.unit">Unidad</span>
+                <select name="unit" id="addUnitSelect">
                   <option value="g">g</option>
                   <option value="ml">ml</option>
                   <option value="pza">pza</option>
@@ -74,27 +102,29 @@
               </label>
             </div>
 
-            <label class="chalk-field">
-              <span>Caduca el</span>
-              <input name="expiryDate" type="date" required />
+            <label class="chalk-field" id="field-expiry">
+              <span data-i18n="pantry.expiresOn">Caduca el</span>
+              <input name="expiryDate" id="inputExpiryDate" type="date" required aria-describedby="expiryDateError" />
+              <span class="field-error-msg" id="expiryDateError" role="alert" aria-live="polite"></span>
             </label>
 
-            <button class="btn btn--chalk" type="submit">Guardar en la alacena</button>
-            <p class="chalk-error" id="addError" role="alert"></p>
+            <button class="btn btn--chalk" type="submit" data-i18n="pantry.saveBtn">Guardar en la alacena</button>
+            <p class="chalk-error" id="addError" role="alert" aria-live="polite"></p>
           </form>
 
           <div class="chalk-legend">
-            <h3>Semáforo</h3>
-            <p><span class="dot dot--fresh"></span> Fresco · más de 5 días</p>
-            <p><span class="dot dot--soon"></span> Consumir pronto · 2 a 4 días</p>
-            <p><span class="dot dot--urgent"></span> Urgente · 24-48 h o vencido</p>
+            <h3 data-i18n="pantry.trafficLight">Semáforo</h3>
+            <p><span class="dot dot--fresh"></span> <span data-i18n="pantry.freshLegend">Fresco · más de 5 días</span></p>
+            <p><span class="dot dot--soon"></span> <span data-i18n="pantry.soonLegend">Consumir pronto · 2 a 4 días</span></p>
+            <p><span class="dot dot--urgent"></span> <span data-i18n="pantry.urgentLegend">Urgente · 24-48 h o vencido</span></p>
           </div>
         </aside>
 
         <!-- Alacena de madera -->
         <div class="cupboard">
           <div class="cupboard-head">
-            <h2>La alacena</h2>
+            <h2 data-i18n="pantry.cupboardTitle">La alacena</h2>
+            <div id="wsLiveAlert" class="ws-live-alert" hidden></div>
             <div class="filters" id="categoryFilters"></div>
           </div>
           <div id="shelves" class="shelves"></div>
@@ -106,15 +136,18 @@
     <section id="view-recipes" class="view">
       <div class="recipes-head">
         <div>
-          <h2>Recetario ordenado por <em>Score de Aprovechamiento</em></h2>
-          <p class="muted">Primero las recetas que rescatan más ingredientes al límite.</p>
+          <h2 id="recipesMainTitle">Recetario ordenado por <em>Score de Aprovechamiento</em></h2>
+          <p class="muted" data-i18n="recipes.subtitle">Primero las recetas que rescatan más ingredientes al límite.</p>
         </div>
-        <div class="servings-picker" role="group" aria-label="Comensales">
-          <span class="servings-label">Comensales</span>
-          <button class="serv" data-servings="1">1</button>
-          <button class="serv is-active" data-servings="2">2</button>
-          <button class="serv" data-servings="4">4</button>
-          <button class="serv" data-servings="6">6</button>
+        <div class="recipes-controls">
+          <button class="fav-filter-btn" id="favFilterBtn" title="Filtrar por recetas favoritas">⭐ Favoritas (<span id="favCount">0</span>)</button>
+          <div class="servings-picker" role="group" aria-label="Comensales">
+            <span class="servings-label" data-i18n="recipes.servingsLabel">Comensales</span>
+            <button class="serv" data-servings="1">1</button>
+            <button class="serv is-active" data-servings="2">2</button>
+            <button class="serv" data-servings="4">4</button>
+            <button class="serv" data-servings="6">6</button>
+          </div>
         </div>
       </div>
       <div id="recipeCards" class="recipe-cards"></div>
@@ -122,17 +155,61 @@
 
     <!-- ============================= HISTORIAL ============================= -->
     <section id="view-history" class="view">
-      <h2>Ollas ya cocinadas</h2>
-      <p class="muted">Cada entrada descontó ingredientes reales de tu despensa.</p>
+      <div class="history-head">
+        <div>
+          <h2 data-i18n="history.title">Ollas ya cocinadas</h2>
+          <p class="muted" data-i18n="history.subtitle">Cada entrada descontó ingredientes reales de tu despensa.</p>
+        </div>
+      </div>
+      <div class="session-summary-box" id="sessionSummaryBox">
+        <div class="session-metric"><span data-i18n="history.recipesCooked">Recetas cocinadas:</span> <strong id="histTotalCooked">0</strong></div>
+        <div class="session-metric"><span data-i18n="history.batchesRescued">Lotes rescatados:</span> <strong id="histTotalSaved">0</strong></div>
+        <div class="session-metric"><span data-i18n="history.co2Avoided">CO₂ evitado:</span> <strong id="histTotalCo2">0.00 kg</strong></div>
+        <div class="session-metric"><span data-i18n="history.waterSaved">Agua ahorrada:</span> <strong id="histTotalWater">0 L</strong></div>
+        <div class="session-metric"><span data-i18n="history.streak">Racha de rescate:</span> <strong id="histStreak">0 🔥</strong></div>
+      </div>
       <div id="historyList" class="history-list"></div>
+    </section>
+
+    <!-- ============================= RECETAS GLOBALES (API EXTERNA) ============================= -->
+    <section id="view-external" class="view">
+      <div class="external-head">
+        <div>
+          <h2 data-i18n="external.title">Recetario Internacional en Vivo (TheMealDB API)</h2>
+          <p class="muted" data-i18n="external.subtitle">Conexión en tiempo real con TheMealDB API para encontrar nuevas ideas con lo que tienes en la alacena.</p>
+        </div>
+      </div>
+
+      <div class="external-search-box">
+        <form id="externalSearchForm" class="external-search-form">
+          <input type="text" id="externalSearchInput" class="external-search-input" placeholder="Buscar recetas del mundo (ej. chicken, soup, pasta, curry, beef)…" data-i18n-placeholder="external.searchPlaceholder" />
+          <button type="submit" class="btn btn--search" data-i18n="external.searchBtn">Buscar en la Web</button>
+        </form>
+
+        <div class="quick-pantry-search">
+          <span class="quick-pantry-label" data-i18n="external.quickPantryTitle">O busca directamente con ingredientes de tu alacena:</span>
+          <div id="quickPantryChips" class="quick-chips"></div>
+        </div>
+      </div>
+
+      <div id="externalStatus" class="external-status" hidden></div>
+      <div id="externalRecipeCards" class="external-cards-grid"></div>
     </section>
   </main>
 
-  <!-- ============================= MODAL RECETA ============================= -->
+  <!-- ============================= MODAL RECETA INTERNA ============================= -->
   <div class="modal-backdrop" id="modal" hidden>
     <div class="recipe-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <button class="sheet-close" id="sheetClose" aria-label="Cerrar">✕</button>
       <div id="sheetBody"></div>
+    </div>
+  </div>
+
+  <!-- ============================= MODAL RECETA EXTERNA ============================= -->
+  <div class="modal-backdrop" id="externalModal" hidden>
+    <div class="recipe-sheet recipe-sheet--external" role="dialog" aria-modal="true" aria-labelledby="extSheetTitle">
+      <button class="sheet-close" id="extSheetClose" aria-label="Cerrar">✕</button>
+      <div id="extSheetBody"></div>
     </div>
   </div>
 

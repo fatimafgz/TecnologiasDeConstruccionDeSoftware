@@ -5,6 +5,7 @@
  * (First Expired, First Out): primero se gasta el lote mas proximo a vencer.
  */
 import { CookingLog } from '../domain/CookingLog.js';
+import { calculateEcoImpact } from '../domain/statelessFunctions.js';
 import { NotFoundError, InsufficientStockError } from './errors.js';
 
 export class CookingExecutionService {
@@ -68,8 +69,11 @@ export class CookingExecutionService {
         recipeId: recipe.id, servings: Number(servings), consumed, savedItems,
       }));
 
+      const ecoImpact = calculateEcoImpact(consumed);
+
       return {
         log,
+        ecoImpact,
         message: savedItems > 0
           ? `¡Cocinada! Rescataste ${savedItems} ingrediente${savedItems > 1 ? 's' : ''} del desperdicio.`
           : '¡Cocinada! Despensa actualizada.',

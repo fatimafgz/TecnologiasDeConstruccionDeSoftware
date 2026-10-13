@@ -8,6 +8,7 @@
  * El desempate favorece la mayor cobertura y el menor tiempo de preparacion.
  */
 import { URGENCY_UI, UrgencyLevel } from '../domain/Urgency.js';
+import { calculateEcoImpact } from '../domain/statelessFunctions.js';
 import { NotFoundError } from './errors.js';
 
 export class RecipeMatchingService {
@@ -114,6 +115,7 @@ export class RecipeMatchingService {
       cookable: missing.length === 0,
       missing,
       ingredients,
+      ecoImpact: calculateEcoImpact(lines),
       highlight: atRiskCount > 0
         ? `Usa ${atRiskCount} ingrediente${atRiskCount > 1 ? 's' : ''} a punto de vencer`
         : 'Sin ingredientes en riesgo',

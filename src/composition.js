@@ -13,6 +13,7 @@ import { PantryService } from './business/PantryService.js';
 import { PortionScalingService } from './business/PortionScalingService.js';
 import { RecipeMatchingService } from './business/RecipeMatchingService.js';
 import { CookingExecutionService } from './business/CookingExecutionService.js';
+import { createFavoritesTracker, createWasteSavingsTracker } from './business/statefulFunctions.js';
 
 export function buildContainer({ dbFile, clock = () => new Date() } = {}) {
   // --- Capa de persistencia ---
@@ -34,10 +35,19 @@ export function buildContainer({ dbFile, clock = () => new Date() } = {}) {
     recipeRepository, pantryRepository, cookingLogRepository, portionScalingService,
     transaction: (fn) => withTransaction(db, fn), clock,
   });
+  const favoritesTracker = createFavoritesTracker();
+  const wasteSavingsTracker = createWasteSavingsTracker();
 
   return {
     db,
     repositories: { ingredientRepository, pantryRepository, recipeRepository, cookingLogRepository },
-    services: { pantryService, recipeMatchingService, portionScalingService, cookingExecutionService },
+    services: {
+      pantryService,
+      recipeMatchingService,
+      portionScalingService,
+      cookingExecutionService,
+      favoritesTracker,
+      wasteSavingsTracker,
+    },
   };
 }

@@ -14,10 +14,28 @@ import { PantryController } from './src/presentation/controllers/PantryControlle
 import { RecipeController } from './src/presentation/controllers/RecipeController.js';
 import { CookingController } from './src/presentation/controllers/CookingController.js';
 
+import { createWebSocketServer } from './src/presentation/websocket/wsServer.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 3000);
 
 const { services } = buildContainer();
+
+const serveStatic = createStaticHandler(join(__dirname, 'src', 'presentation', 'public'));
+
+const server = createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+    if (url.pathname.startsWith('/api/')) return router.handle(req, res, url);
+    if (await serveStatic(req, res, url.pathname)) return;
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('No encontrado');
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+const wsServer = createWebSocketServer(server, { path: '/ws' });
+services.wsServer = wsServer;
 
 const pantryController = new PantryController(services);
 const recipeController = new RecipeController(services);
@@ -32,19 +50,6 @@ const router = new Router()
   .get('/api/recipes/:id', (...a) => recipeController.detail(...a))
   .post('/api/cook', (...a) => cookingController.cook(...a))
   .get('/api/cook/history', (...a) => cookingController.history(...a));
-
-const serveStatic = createStaticHandler(join(__dirname, 'src', 'presentation', 'public'));
-
-const server = createServer(async (req, res) => {
-  try {
-    const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
-    if (url.pathname.startsWith('/api/')) return router.handle(req, res, url);
-    if (await serveStatic(req, res, url.pathname)) return;
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('No encontrado');
-  } catch (err) {
-    sendError(res, err);
-  }
-});
 
 server.listen(PORT, () => {
   console.log(`\n  🥬  ZeroWaste Pantry escuchando en http://localhost:${PORT}\n`);
